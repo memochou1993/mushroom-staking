@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Staking is Ownable, ReentrancyGuard {
+contract MushroomStaking is Ownable, ReentrancyGuard {
     uint256 constant REWARD_RATE = 3650;
 
     address private _owner;
