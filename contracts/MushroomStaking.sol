@@ -99,7 +99,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         uint256 _fee = calculateFee(msg.value);
         uint256 _amount = msg.value - _fee;
         uint256 _rewardRate = calculateRewardRate(stakeholders[msg.sender].level);
-        uint256 _lastClaimDate;
+        uint256 _lastClaimDate = block.timestamp;
         if (block.timestamp < startTime) {
             _lastClaimDate = startTime;
         }
