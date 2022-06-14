@@ -19,7 +19,8 @@ contract Staking is Ownable, ReentrancyGuard {
 
     struct Stake {
         uint256 amount;
-        uint256 claimedAt;
+        uint256 claimed;
+        uint256 lastClaimDate;
     }
 
     constructor() {
@@ -37,6 +38,14 @@ contract Staking is Ownable, ReentrancyGuard {
         returns (uint256)
     {
         return address(this).balance;
+    }
+
+    function rewardRate()
+        external
+        pure
+        returns (uint256)
+    {
+        return REWARD_RATE;
     }
 
     function stakes(address _stakeholder)
@@ -69,7 +78,8 @@ contract Staking is Ownable, ReentrancyGuard {
         uint256 _amount = msg.value - _fee;
         stakeholders[msg.sender].stakes.push(Stake({
             amount: _amount,
-            claimedAt: block.timestamp
+            claimed: 0,
+            lastClaimDate: block.timestamp
         }));
         payable(_owner).transfer(_fee);
     }
@@ -80,14 +90,18 @@ contract Staking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyStakeholder
     {
-        uint256 _rewards;
+        uint256 _totalRewards;
+        uint256 _totalFees;
         for (uint256 i = 0; i < stakeholders[msg.sender].stakes.length; i++) {
-            _rewards += calculateReward(stakeholders[msg.sender].stakes[i]);
-            stakeholders[msg.sender].stakes[i].claimedAt = block.timestamp;
+            uint256 _reward = calculateReward(stakeholders[msg.sender].stakes[i]);
+            uint256 _fee = calculateFee(_reward);
+            stakeholders[msg.sender].stakes[i].claimed += _reward - _fee;
+            stakeholders[msg.sender].stakes[i].lastClaimDate = block.timestamp;
+            _totalRewards += _reward;
+            _totalFees += _fee;
         }
-        uint256 _fee = calculateFee(_rewards);
-        payable(_owner).transfer(_fee);
-        payable(msg.sender).transfer(_rewards - _fee);
+        payable(msg.sender).transfer(_totalRewards - _totalFees);
+        payable(_owner).transfer(_totalFees);
     }
 
     function calculateReward(Stake memory _stake)
@@ -95,7 +109,7 @@ contract Staking is Ownable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        return (block.timestamp - _stake.claimedAt) * _stake.amount * REWARD_RATE / 100 / 365 days;
+        return (block.timestamp - _stake.lastClaimDate) * _stake.amount * REWARD_RATE / 100 / 365 days;
     }
 
     function calculateFee(uint256 _amount)
