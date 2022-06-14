@@ -1,0 +1,11 @@
+{
+  "extends": "solium:all",
+  "plugins": [
+    "security"
+  ],
+  "rules": {
+    "blank-lines": "off",
+    "arg-overflow": "off",
+    "security/no-block-members": "off"
+  }
+}
