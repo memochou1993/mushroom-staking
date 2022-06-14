@@ -5,21 +5,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract MushroomStaking is Ownable, ReentrancyGuard {
-    uint256 constant REWARD_RATE = 3650;
-
     address private _owner;
-
+    uint256 constant MIN_REWARD_RATE = 365 * 10;
+    uint256 constant MAX_REWARD_RATE = 365 * 12;
     uint256 public startTime;
     uint256 public stakeholderCount;
     mapping(address => Stakeholder) public stakeholders;
 
     struct Stakeholder {
         address addr;
+        uint256 level;
         Stake[] stakes;
     }
 
     struct Stake {
         uint256 amount;
+        uint256 rewardRate;
         uint256 claimed;
         uint256 lastClaimDate;
     }
@@ -59,21 +60,22 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         return address(this).balance;
     }
 
-    function rewardRate()
-        external
-        pure
-        returns (uint256)
-    {
-        return REWARD_RATE;
-    }
-
-    function stakes(address _stakeholder)
+    function stakesOf(address _stakeholder)
         external
         view
         onlyStakeholder
         returns (Stake[] memory)
     {
         return stakeholders[_stakeholder].stakes;
+    }
+
+    function rewardRateOf(address _stakeholder)
+        external
+        view
+        onlyStakeholder
+        returns (uint256)
+    {
+        return calculateRewardRate(stakeholders[_stakeholder].level);
     }
 
     function isStakeholder(address _stakeholder)
@@ -96,12 +98,14 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         }
         uint256 _fee = calculateFee(msg.value);
         uint256 _amount = msg.value - _fee;
+        uint256 _rewardRate = calculateRewardRate(stakeholders[msg.sender].level);
         uint256 _lastClaimDate;
         if (block.timestamp < startTime) {
             _lastClaimDate = startTime;
         }
         stakeholders[msg.sender].stakes.push(Stake({
             amount: _amount,
+            rewardRate: _rewardRate,
             claimed: 0,
             lastClaimDate: _lastClaimDate
         }));
@@ -134,7 +138,16 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        return (block.timestamp - _stake.lastClaimDate) * _stake.amount * REWARD_RATE / 100 / 365 days;
+        return (block.timestamp - _stake.lastClaimDate) * _stake.amount * _stake.rewardRate / 100 / 365 days;
+    }
+
+    function calculateRewardRate(uint256 _level)
+        private
+        pure
+        returns (uint256)
+    {
+        uint256 _rewardRate = MIN_REWARD_RATE * (101 ** _level) / (100 ** _level);
+        return min(_rewardRate, MAX_REWARD_RATE);
     }
 
     function calculateFee(uint256 _amount)
@@ -143,6 +156,14 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         returns (uint256)
     {
         return _amount * 1 / 100;
+    }
+
+    function min(uint256 _a, uint256 _b)
+        private
+        pure
+        returns (uint256)
+    {
+        return _a < _b ? _a : _b;
     }
 
     event Deposit(address indexed _stakeholder, uint256 _amount);
