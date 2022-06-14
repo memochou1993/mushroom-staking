@@ -92,6 +92,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
+        require(stakeholders[msg.sender].stakes.length <= 20, "maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
@@ -109,6 +110,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
             claimed: 0,
             lastClaimDate: _lastClaimDate
         }));
+        stakeholders[msg.sender].level++;
         payable(_owner).transfer(_fee);
     }
 
@@ -155,7 +157,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         pure
         returns (uint256)
     {
-        return _amount * 1 / 100;
+        return _amount * 2 / 100;
     }
 
     function min(uint256 _a, uint256 _b)
