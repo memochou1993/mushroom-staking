@@ -9,6 +9,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
 
     address private _owner;
 
+    uint256 public startTime;
     uint256 public stakeholderCount;
     mapping(address => Stakeholder) public stakeholders;
 
@@ -28,8 +29,26 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
     }
 
     modifier onlyStakeholder() {
-        require(isStakeholder(msg.sender), "Staking: caller is not the stakeholder");
+        require(isStakeholder(msg.sender), "caller is not the stakeholder");
         _;
+    }
+
+    modifier onlyOpened() {
+        require(startTime > 0, "event is not opened yet");
+        _;
+    }
+
+    modifier onlyStarted() {
+        require(block.timestamp > startTime, "event is not started yet");
+        _;
+    }
+
+    function setStartTime(uint256 _startTime)
+        external
+        onlyOwner
+    {
+        require(startTime == 0, "event has already opened");
+        startTime = _startTime;
     }
 
     function contractBalance()
@@ -69,6 +88,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         public
         payable
         nonReentrant
+        onlyOpened
     {
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
@@ -76,10 +96,14 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         }
         uint256 _fee = calculateFee(msg.value);
         uint256 _amount = msg.value - _fee;
+        uint256 _lastClaimDate;
+        if (block.timestamp < startTime) {
+            _lastClaimDate = startTime;
+        }
         stakeholders[msg.sender].stakes.push(Stake({
             amount: _amount,
             claimed: 0,
-            lastClaimDate: block.timestamp
+            lastClaimDate: _lastClaimDate
         }));
         payable(_owner).transfer(_fee);
     }
@@ -89,6 +113,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         payable
         nonReentrant
         onlyStakeholder
+        onlyStarted
     {
         uint256 _totalRewards;
         uint256 _totalFees;
