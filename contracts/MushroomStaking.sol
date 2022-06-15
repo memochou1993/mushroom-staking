@@ -93,7 +93,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
-        require(stakeholders[msg.sender].stakes.length <= 20, "maximum stake count is reached");
+        require(stakeholders[msg.sender].stakes.length <= 100, "maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
