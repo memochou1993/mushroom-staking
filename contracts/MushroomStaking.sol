@@ -179,7 +179,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         pure
         returns (uint256)
     {
-        return _amount * 2 / 100;
+        return _amount * 3 / 100;
     }
 
     function min(uint256 _a, uint256 _b)
