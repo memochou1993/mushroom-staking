@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract MushroomStaking is Ownable, ReentrancyGuard {
     address private _owner;
-    uint256 constant MIN_REWARD_RATE = 365 * 10;
+    uint256 constant MIN_REWARD_RATE = 365 * 8;
     uint256 constant MAX_REWARD_RATE = 365 * 12;
     uint256 public startTime;
     uint256 public stakeholderCount;
@@ -162,7 +162,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         pure
         returns (uint256)
     {
-        uint256 _rewardRate = MIN_REWARD_RATE * (101 ** _level) / (100 ** _level);
+        uint256 _rewardRate = MIN_REWARD_RATE * (105 ** _level) / (100 ** _level);
         return min(_rewardRate, MAX_REWARD_RATE);
     }
 
