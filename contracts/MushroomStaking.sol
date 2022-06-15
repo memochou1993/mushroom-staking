@@ -15,6 +15,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
     struct Stakeholder {
         address addr;
         uint256 level;
+        uint256 rebate;
         Stake[] stakes;
     }
 
@@ -86,7 +87,7 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
         return stakeholders[_stakeholder].addr != address(0);
     }
 
-    function deposit()
+    function deposit(address _referrer)
         public
         payable
         nonReentrant
@@ -111,7 +112,16 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
             lastClaimDate: _lastClaimDate
         }));
         stakeholders[msg.sender].level++;
+        address _ref = _referrer;
+        if (_referrer == msg.sender) {
+            _ref = _owner;
+        }
+        if (isStakeholder(_ref) || _ref == _owner) {
+            stakeholders[msg.sender].rebate += calculateRebate(_amount);
+            stakeholders[_ref].rebate += calculateRebate(_amount);
+        }
         payable(_owner).transfer(_fee);
+        emit Deposit(msg.sender, msg.value);
     }
 
     function claim()
@@ -131,8 +141,12 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
             _totalRewards += _reward;
             _totalFees += _fee;
         }
-        payable(msg.sender).transfer(_totalRewards - _totalFees);
+        uint256 _rebate = stakeholders[msg.sender].rebate;
+        stakeholders[msg.sender].rebate = 0;
+        uint256 _amount = _totalRewards - _totalFees + _rebate;
         payable(_owner).transfer(_totalFees);
+        payable(msg.sender).transfer(_amount);
+        emit Claim(msg.sender, _amount);
     }
 
     function calculateReward(Stake memory _stake)
@@ -150,6 +164,14 @@ contract MushroomStaking is Ownable, ReentrancyGuard {
     {
         uint256 _rewardRate = MIN_REWARD_RATE * (101 ** _level) / (100 ** _level);
         return min(_rewardRate, MAX_REWARD_RATE);
+    }
+
+    function calculateRebate(uint256 _amount)
+        private
+        pure
+        returns (uint256)
+    {
+        return _amount * 5 / 100;
     }
 
     function calculateFee(uint256 _amount)
