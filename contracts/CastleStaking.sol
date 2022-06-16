@@ -16,6 +16,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         address addr;
         uint256 level;
         uint256 rebate;
+        uint256 inviteeCount;
         Stake[] stakes;
     }
 
@@ -119,6 +120,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         if (isStakeholder(_ref) || _ref == _owner) {
             stakeholders[msg.sender].rebate += calculateRebate(_amount);
             stakeholders[_ref].rebate += calculateRebate(_amount);
+            stakeholders[_ref].inviteeCount += 1;
         }
         payable(_owner).transfer(_fee);
         emit Deposit(msg.sender, msg.value);
