@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract FoxStaking is Ownable, ReentrancyGuard {
+contract CastleStaking is Ownable, ReentrancyGuard {
     address private _owner;
     uint256 constant MIN_REWARD_RATE = 365 * 8;
     uint256 constant MAX_REWARD_RATE = 365 * 12;

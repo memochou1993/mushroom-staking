@@ -1,5 +1,5 @@
-const FoxStaking = artifacts.require('FoxStaking');
+const CastleStaking = artifacts.require('CastleStaking');
 
 module.exports = async (deployer) => {
-  await deployer.deploy(FoxStaking);
+  await deployer.deploy(CastleStaking);
 };
