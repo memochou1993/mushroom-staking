@@ -31,17 +31,17 @@ contract CastleStaking is Ownable, ReentrancyGuard {
     }
 
     modifier onlyStakeholder() {
-        require(isStakeholder(msg.sender), "caller is not the stakeholder");
+        require(isStakeholder(msg.sender), "CastleStaking: caller is not the stakeholder");
         _;
     }
 
     modifier onlyOpened() {
-        require(startTime > 0, "event is not opened yet");
+        require(startTime > 0, "CastleStaking: event is not opened yet");
         _;
     }
 
     modifier onlyStarted() {
-        require(block.timestamp > startTime, "event is not started yet");
+        require(block.timestamp > startTime, "CastleStaking: event is not started yet");
         _;
     }
 
@@ -49,7 +49,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        require(startTime == 0, "event has already opened");
+        require(startTime == 0, "CastleStaking: event has already opened");
         startTime = _startTime;
     }
 
@@ -93,7 +93,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
-        require(stakeholders[msg.sender].stakes.length <= 100, "maximum stake count is reached");
+        require(stakeholders[msg.sender].stakes.length <= 100, "CastleStaking: maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
