@@ -84,7 +84,7 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
-        require(stakeholders[msg.sender].stakes.length <= 20, "CastleStaking: maximum stake count is reached");
+        require(stakeholders[msg.sender].stakes.length < 20, "ParticleStaking: maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
