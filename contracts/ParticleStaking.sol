@@ -8,6 +8,7 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
     address private _owner;
     uint256 constant MIN_REWARD_RATE = 365 * 8;
     uint256 constant MAX_REWARD_RATE = 365 * 12;
+    uint256 constant MAX_LEVEL = 10;
     uint256 public startTime;
     uint256 public stakeholderCount;
     mapping(address => Stakeholder) public stakeholders;
@@ -94,7 +95,6 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
-        require(stakeholders[msg.sender].stakes.length <= 20, "ParticleStaking: maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
@@ -106,14 +106,18 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         if (block.timestamp < startTime) {
             _lastClaimDate = startTime;
         }
-        stakeholders[msg.sender].stakes.push(Stake({
-            amount: _amount,
-            rewardRate: _rewardRate,
-            claimed: 0,
-            lastClaimDate: _lastClaimDate
-        }));
-        stakeholders[msg.sender].level++;
-        if (_referrer == _owner || _referrer == msg.sender || !isStakeholder(_referrer)) {
+        if (stakeholders[msg.sender].level < MAX_LEVEL) {
+            stakeholders[msg.sender].stakes.push(Stake({
+                amount: _amount,
+                rewardRate: _rewardRate,
+                claimed: 0,
+                lastClaimDate: _lastClaimDate
+            }));
+            stakeholders[msg.sender].level++;
+        } else {
+            stakeholders[msg.sender].stakes[MAX_LEVEL - 1].amount += _amount;
+        }
+        if (_referrer == msg.sender || !isStakeholder(_referrer)) {
             stakeholders[_owner].rebate += calculateRebate(_amount);
             stakeholders[_owner].inviteeCount += 1;
         } else {
