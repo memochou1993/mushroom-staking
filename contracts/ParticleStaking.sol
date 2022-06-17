@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract CastleStaking is Ownable, ReentrancyGuard {
+contract ParticleStaking is Ownable, ReentrancyGuard {
     address private _owner;
     uint256 constant MIN_REWARD_RATE = 365 * 8;
     uint256 constant MAX_REWARD_RATE = 365 * 12;
@@ -32,17 +32,17 @@ contract CastleStaking is Ownable, ReentrancyGuard {
     }
 
     modifier onlyStakeholder() {
-        require(isStakeholder(msg.sender), "CastleStaking: caller is not the stakeholder");
+        require(isStakeholder(msg.sender), "ParticleStaking: caller is not the stakeholder");
         _;
     }
 
     modifier onlyOpened() {
-        require(startTime > 0, "CastleStaking: event is not opened yet");
+        require(startTime > 0, "ParticleStaking: event is not opened yet");
         _;
     }
 
     modifier onlyStarted() {
-        require(block.timestamp > startTime, "CastleStaking: event is not started yet");
+        require(block.timestamp > startTime, "ParticleStaking: event is not started yet");
         _;
     }
 
@@ -50,7 +50,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        require(startTime == 0, "CastleStaking: event has already opened");
+        require(startTime == 0, "ParticleStaking: event has already opened");
         startTime = _startTime;
     }
 
@@ -94,7 +94,7 @@ contract CastleStaking is Ownable, ReentrancyGuard {
         nonReentrant
         onlyOpened
     {
-        require(stakeholders[msg.sender].stakes.length <= 20, "CastleStaking: maximum stake count is reached");
+        require(stakeholders[msg.sender].stakes.length <= 20, "ParticleStaking: maximum stake count is reached");
         if (!isStakeholder(msg.sender)) {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
