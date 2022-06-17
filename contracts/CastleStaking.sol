@@ -113,14 +113,13 @@ contract CastleStaking is Ownable, ReentrancyGuard {
             lastClaimDate: _lastClaimDate
         }));
         stakeholders[msg.sender].level++;
-        address _ref = _referrer;
-        if (_referrer == msg.sender) {
-            _ref = _owner;
-        }
-        if (isStakeholder(_ref) || _ref == _owner) {
+        if (_referrer == _owner || _referrer == msg.sender || !isStakeholder(_referrer)) {
+            stakeholders[_owner].rebate += calculateRebate(_amount);
+            stakeholders[_owner].inviteeCount += 1;
+        } else {
             stakeholders[msg.sender].rebate += calculateRebate(_amount);
-            stakeholders[_ref].rebate += calculateRebate(_amount);
-            stakeholders[_ref].inviteeCount += 1;
+            stakeholders[_referrer].rebate += calculateRebate(_amount);
+            stakeholders[_referrer].inviteeCount += 1;
         }
         payable(_owner).transfer(_fee);
         emit Deposit(msg.sender, msg.value);
