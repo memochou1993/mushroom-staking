@@ -72,15 +72,6 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         return stakeholders[_stakeholder].stakes;
     }
 
-    function rewardRateOf(address _stakeholder)
-        external
-        view
-        onlyStakeholder
-        returns (uint256)
-    {
-        return calculateRewardRate(stakeholders[_stakeholder].level);
-    }
-
     function isStakeholder(address _stakeholder)
         public
         view
