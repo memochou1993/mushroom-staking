@@ -14,16 +14,21 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
 
     struct Stakeholder {
         address addr;
-        uint256 rebate;
         uint256 inviteeCount;
+        Rebate rebate;
         Stake[] stakes;
+    }
+
+    struct Rebate {
+        uint256 amount;
+        uint256 claimed;
     }
 
     struct Stake {
         uint256 amount;
         uint256 rewardRate;
         uint256 claimed;
-        uint256 lastClaimDate;
+        uint256 createdAt;
     }
 
     constructor() {
@@ -92,22 +97,22 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         uint256 _fee = calculateFee(msg.value);
         uint256 _amount = msg.value - _fee;
         uint256 _rewardRate = calculateRewardRate(stakeholders[msg.sender].stakes.length);
-        uint256 _lastClaimDate = block.timestamp;
+        uint256 _createdAt = block.timestamp;
         if (block.timestamp < startTime) {
-            _lastClaimDate = startTime;
+            _createdAt = startTime;
         }
         stakeholders[msg.sender].stakes.push(Stake({
             amount: _amount,
             rewardRate: _rewardRate,
             claimed: 0,
-            lastClaimDate: _lastClaimDate
+            createdAt: _createdAt
         }));
         if (_referrer == msg.sender || !isStakeholder(_referrer)) {
-            stakeholders[_owner].rebate += calculateRebate(_amount);
+            stakeholders[_owner].rebate.amount += calculateRebate(_amount);
             stakeholders[_owner].inviteeCount += 1;
         } else {
-            stakeholders[msg.sender].rebate += calculateRebate(_amount);
-            stakeholders[_referrer].rebate += calculateRebate(_amount);
+            stakeholders[msg.sender].rebate.amount += calculateRebate(_amount);
+            stakeholders[_referrer].rebate.amount += calculateRebate(_amount);
             stakeholders[_referrer].inviteeCount += 1;
         }
         payable(_owner).transfer(_fee);
@@ -127,12 +132,12 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
             uint256 _reward = calculateReward(stakeholders[msg.sender].stakes[i]);
             uint256 _fee = calculateFee(_reward);
             stakeholders[msg.sender].stakes[i].claimed += _reward - _fee;
-            stakeholders[msg.sender].stakes[i].lastClaimDate = block.timestamp;
             _totalRewards += _reward;
             _totalFees += _fee;
         }
-        uint256 _rebate = stakeholders[msg.sender].rebate;
-        stakeholders[msg.sender].rebate = 0;
+        uint256 _rebate = stakeholders[msg.sender].rebate.amount;
+        stakeholders[msg.sender].rebate.amount = 0;
+        stakeholders[msg.sender].rebate.claimed += _rebate;
         uint256 _amount = _totalRewards - _totalFees + _rebate;
         payable(_owner).transfer(_totalFees);
         payable(msg.sender).transfer(_amount);
@@ -144,7 +149,7 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         view
         returns (uint256)
     {
-        return (block.timestamp - _stake.lastClaimDate) * _stake.amount * _stake.rewardRate / 100 / 365 days;
+        return (block.timestamp - _stake.createdAt) * _stake.amount * _stake.rewardRate / 100 / 365 days - _stake.claimed;
     }
 
     function calculateRewardRate(uint256 _level)
