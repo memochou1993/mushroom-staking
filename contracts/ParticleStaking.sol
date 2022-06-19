@@ -14,7 +14,7 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
 
     struct Stakeholder {
         address addr;
-        uint256 inviteeCount;
+        uint256 referred;
         Rebate rebate;
         Stake[] stakes;
     }
@@ -109,11 +109,11 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         }));
         if (_referrer == msg.sender || !isStakeholder(_referrer)) {
             stakeholders[_owner].rebate.amount += calculateRebate(_amount);
-            stakeholders[_owner].inviteeCount += 1;
+            stakeholders[_owner].referred += 1;
         } else {
             stakeholders[msg.sender].rebate.amount += calculateRebate(_amount);
             stakeholders[_referrer].rebate.amount += calculateRebate(_amount);
-            stakeholders[_referrer].inviteeCount += 1;
+            stakeholders[_referrer].referred += 1;
         }
         payable(_owner).transfer(_fee);
     }
