@@ -25,8 +25,8 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
     }
 
     struct Stake {
-        uint256 amount;
         uint256 rewardRate;
+        uint256 amount;
         uint256 claimed;
         uint256 createdAt;
     }
@@ -83,7 +83,7 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         return stakeholders[_stakeholder].addr != address(0);
     }
 
-    function deposit(address _referrer)
+    function stake(address _referrer)
         public
         payable
         nonReentrant
@@ -94,16 +94,16 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
             stakeholders[msg.sender].addr = msg.sender;
             stakeholderCount++;
         }
+        uint256 _rewardRate = calculateRewardRate(stakeholders[msg.sender].stakes.length);
         uint256 _fee = calculateFee(msg.value);
         uint256 _amount = msg.value - _fee;
-        uint256 _rewardRate = calculateRewardRate(stakeholders[msg.sender].stakes.length);
         uint256 _createdAt = block.timestamp;
         if (block.timestamp < startTime) {
             _createdAt = startTime;
         }
         stakeholders[msg.sender].stakes.push(Stake({
-            amount: _amount,
             rewardRate: _rewardRate,
+            amount: _amount,
             claimed: 0,
             createdAt: _createdAt
         }));
@@ -116,7 +116,6 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
             stakeholders[_referrer].inviteeCount += 1;
         }
         payable(_owner).transfer(_fee);
-        emit Deposit(msg.sender, msg.value);
     }
 
     function claim()
@@ -141,7 +140,6 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
         uint256 _amount = _totalRewards - _totalFees + _rebate;
         payable(_owner).transfer(_totalFees);
         payable(msg.sender).transfer(_amount);
-        emit Claim(msg.sender, _amount);
     }
 
     function calculateReward(Stake memory _stake)
@@ -184,7 +182,4 @@ contract ParticleStaking is Ownable, ReentrancyGuard {
     {
         return _a < _b ? _a : _b;
     }
-
-    event Deposit(address indexed _stakeholder, uint256 _amount);
-    event Claim(address indexed _stakeholder, uint256 _amount);
 }
